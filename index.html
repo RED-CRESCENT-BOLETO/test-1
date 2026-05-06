@@ -583,65 +583,27 @@ function generateResignation(){
 
 
 // ==========================================================
-// 🧨 الحل الجذري النهائي (تحويل الـ GIF إلى PNG داخلياً للنسخ)
+// 🧨 الحل الجذري النهائي (النص السري لضمان اللصق المزدوج)
 // ==========================================================
-async function copyResignationRadical() {
+function copyResignationRadical() {
     const text = document.getElementById('res_output').textContent;
     if(!text) return alert("⚠️ الرجاء إنشاء القرار أولاً!");
 
-    const btn = document.getElementById('btnCopyRadical');
-    const oldText = btn.textContent;
-    btn.textContent = "جاري تحضير الملف...";
+    // الرابط المباشر الصحيح بناءً على صورك
+    const bannerURL = "https://red-crescent-boleto.github.io/RED-CRESCENT-BOLETO/" + encodeURIComponent("استقالة.gif");
+    
+    // هذا الفاصل السري يجبر ديسكورد على إظهار معاينة الصورة في الأعلى وإبقاء النص مستقلاً في الأسفل
+    const deepInvisible = "\n\u200B\n\u200B\n"; 
+    
+    // ندمج الرابط والنص معاً كنص واحد حتى لا يضيع أي منهما
+    const finalResult = bannerURL + deepInvisible + text;
 
-    try {
-        // نستخدم رابط الموقع المباشر لتجنب أخطاء المسارات
-        const safeAbsoluteURL = window.location.href.replace(/index\.html.*/, '') + encodeURI("استقالة.gif");
-
-        // إنشاء صورة مخفية
-        const img = new Image();
-        img.crossOrigin = "Anonymous"; 
-        img.src = safeAbsoluteURL;
-
-        await new Promise((resolve, reject) => {
-            img.onload = resolve;
-            img.onerror = () => reject(new Error("لم يتم تحميل الصورة"));
-        });
-
-        // رسم الـ GIF على Canvas لتحويله لـ PNG (الحافظة لا تقبل GIF)
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-
-        // تحويل ونسخ
-        canvas.toBlob(async (blob) => {
-            try {
-                const item = new ClipboardItem({
-                    "image/png": blob,
-                    "text/plain": new Blob([text], { type: "text/plain" })
-                });
-                await navigator.clipboard.write([item]);
-                alert("✅ تم النسخ كملف مرفق بنجاح! الصق في ديسكورد وسيظهر البنر في الأعلى.");
-            } catch (clipboardErr) {
-                console.error("فشل النسخ المتقدم:", clipboardErr);
-                fallbackCopy(safeAbsoluteURL, text);
-            } finally {
-                btn.textContent = oldText;
-            }
-        }, "image/png");
-
-    } catch (err) {
-        console.error("فشل في جلب الصورة:", err);
-        const fallbackURL = window.location.href.replace(/index\.html.*/, '') + encodeURI("استقالة.gif");
-        fallbackCopy(fallbackURL, text);
-        btn.textContent = oldText;
-    }
-}
-
-function fallbackCopy(url, text) {
-    navigator.clipboard.writeText(url + "\n\n" + text);
-    alert("⚠️ تم النسخ باستخدام الطريقة الاحتياطية (رابط ونص). تأكد من صحة مسار الصورة.");
+    navigator.clipboard.writeText(finalResult).then(() => {
+        alert("✅ تم النسخ بنجاح! الصق في ديسكورد وسيتكفل بوضع الصورة فوق النص تلقائياً.");
+    }).catch((err) => {
+        console.error("فشل النسخ:", err);
+        alert("❌ حدث خطأ أثناء النسخ.");
+    });
 }
 // ==========================================================
 
