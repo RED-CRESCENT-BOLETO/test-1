@@ -31,7 +31,6 @@
       overflow: hidden; padding: 25px; gap: 25px; position: relative; perspective: 2000px;
   }
 
-  /* ---------------- السحر الحقيقي: خلفية سائلة وتتوهج ---------------- */
   body::before {
       content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
       background: radial-gradient(circle at 50% 50%, rgba(20, 0, 0, 1) 0%, var(--base-dark) 50%);
@@ -54,7 +53,6 @@
 
   @keyframes liquidBreathe { 0% { transform: scale(0.8) translate(0, 0); } 100% { transform: scale(1.2) translate(10%, -10%); } }
 
-  /* ---------------- القائمة الجانبية ---------------- */
   .sidebar {
       width: 320px; height: 100%;
       background: var(--glass-panel);
@@ -104,7 +102,6 @@
   .nav-item i { font-size: 22px; transition: 0.5s; opacity: 0.7; }
   .nav-item:hover i, .nav-item.active i { color: var(--neon-red); opacity: 1; filter: drop-shadow(0 0 10px var(--neon-red)); transform: scale(1.1); }
 
-  /* ---------------- المحتوى الرئيسي ---------------- */
   .main-content { 
       flex: 1; height: 100%; border-radius: 40px;
       background: var(--glass-panel);
@@ -218,6 +215,8 @@
     <input type="number" id="int_vac_duration" placeholder="عدد الساعات">
     <label>الرصيد المتبقي (بالساعات):</label>
     <input type="number" id="int_vac_balance" placeholder="عدد الساعات">
+    <div class="hint">⏱️ سيتم ضبط وقت بدء الإجازة تلقائيًا بعد <b>5 دقائق</b> من الضغط على “إنشاء القرار” (توقيت مكة المكرمة).</div>
+
     <button class="generate" onclick="generateInternalLeave()">إنشاء القرار</button>
     <button class="generate copy-btn" onclick="copyInternalLeave()">نسخ القرار</button>
     <pre id="int_output"></pre>
@@ -302,6 +301,9 @@
     <button class="generate" onclick="generateExternalLeave()">إنشاء القرار</button>
     <button class="generate copy-btn" onclick="copyExternalLeave()">نسخ القرار</button>
     <pre id="ext_output"></pre>
+    <label class="result-label" id="ext_role_label" style="display:none;">رسالة طلب الرول:</label>
+    <pre id="ext_role_output" class="role-pre" style="display:none;"></pre>
+    <button class="generate copy-btn" onclick="copyExternalRole()" id="copyExtRoleBtn" style="display:none;">نسخ طلب الرول</button>
   </div>
 
   <div id="assignment" class="form-section">
@@ -329,6 +331,9 @@
     <button class="generate" onclick="generateAssignment()">إنشاء القرار</button>
     <button class="generate copy-btn" onclick="copyAssignment()">نسخ القرار</button>
     <pre id="ass_output"></pre>
+    <label class="result-label" id="ass_role_label" style="display:none;">رسالة طلب الرول:</label>
+    <pre id="ass_role_output" class="role-pre" style="display:none;"></pre>
+    <button class="generate copy-btn" onclick="copyAssignmentRole()" id="copyAssRoleBtn" style="display:none;">نسخ طلب الرول</button>
   </div>
 
   <div id="rolesRequest" class="form-section">
@@ -396,22 +401,34 @@ function showForm(id){
   else hideQuickPanel();
 }
 
+function generateRoleRequestBox(copyId, type = 'يرجى اختيار رول مناسب من القائمة'){
+    return `الشخص : ${copyId}\nالموضوع : ${type}\n\n<@&1071933358503903242>\n<@&1071933359086911561>\n<@&1092667422902862004>\n<@&1153823182281777293>`;
+}
+
 function normalizeCopyId(copyId) {
     let id = copyId.trim();
     if (id && !id.startsWith("<@")) id = `<@${id}>`;
     return id;
 }
 
-function generateRoleRequestBox(copyId, type){
-    return `الشخص : ${copyId}\nالموضوع : ${type}\n\n<@&1071933358503903242>\n<@&1071933359086911561>\n<@&1092667422902862004>\n<@&1153823182281777293>`;
-}
-
 function generateInternalLeave(){
   let copyUser = normalizeCopyId(document.getElementById("int_copyUser").value);
   let duration = document.getElementById("int_vac_duration").value;
   let balance  = document.getElementById("int_vac_balance").value;
-  let remaining = balance - duration;
-  let result=`﷽\n\n**قرار صـادر مـن <@&1071933369698496532>**\n\nالموضوع : إجازة داخلية\n\nللمسعف : ${copyUser}\n\nالمدة : ${duration} ساعة\n\nالرصيد المتبقي : ${remaining} ساعة\n\nإعتماد :\n<@&1071933358503903242>\n<@&1071933359086911561>`;
+  let tzNow = new Date(new Date().toLocaleString("en-US",{timeZone:"Asia/Riyadh"}));
+  let startDate = new Date(tzNow.getTime() + 5 * 60 * 1000);
+  let endDate   = new Date(startDate.getTime() + (duration || 0) * 60 * 60 * 1000);
+  function formatDate(date){
+    const y = date.getFullYear();
+    const m = String(date.getMonth()+1).padStart(2,'0');
+    const d = String(date.getDate()).padStart(2,'0');
+    let h   = date.getHours();
+    const min = String(date.getMinutes()).padStart(2,'0');
+    const per = h >= 12 ? "م" : "ص";
+    h = h % 12; h = h ? h : 12;
+    return `${h}:${min} ${per} | ${y}/${m}/${d}`;
+  }
+  let result=`﷽\n\n**قرار صـادر مـن <@&1071933369698496532>**\n\nالموضوع : إجازة داخلية\n\nللمسعف : ${copyUser}\n\nالمدة : ${duration} ساعة\n\nمن الساعة : ${formatDate(startDate)}\nإلى الساعة : ${formatDate(endDate)}\n\nالرصيد المتبقي : ${balance - duration} ساعة\n\nإعتماد :\n<@&1071933358503903242>\n<@&1071933359086911561>`;
   document.getElementById("int_output").textContent=result;
   showQuickTemplates('internalLeave');
 }
@@ -430,16 +447,13 @@ function generateResignation(){
   const hasViolations=document.getElementById('res_hasViolations')?.value;
   const normalizedCopyId = normalizeCopyId(copyId);
   
-  // البنر والرمز المخفي البرمجي لإجبار ديسكورد على وضعه في الأعلى
   const resignationBanner = "https://up6.cc/2025/02/173919106037041.gif";
-  const forceTop = "\u200E"; 
+  const invisibleForce = "\u200B\n".repeat(2); // حل التشقلبة لرفع البنر
 
-  let pullMessage = '';
-  const pullOutputBox = document.getElementById('res_pull_output');
-  const pullBoxDiv = document.getElementById('res_pull_box');
-  let roleMessage = '';
-  const roleOutputBox = document.getElementById('res_role_output');
-  const roleBoxDiv = document.getElementById('res_role_box');
+  let pullOutputBox = document.getElementById('res_pull_output');
+  let pullBoxDiv = document.getElementById('res_pull_box');
+  let roleOutputBox = document.getElementById('res_role_output');
+  let roleBoxDiv = document.getElementById('res_role_box');
   
   pullBoxDiv.style.display = 'none';
   roleBoxDiv.style.display = 'none';
@@ -450,19 +464,16 @@ function generateResignation(){
   if(level==='متدرب'||level==='مستوى 1'){
     let days=level==='متدرب'?14:7;
     let fine=level==='متدرب'?'1,000,000':'500,000';
-    pullMessage = `${normalizedCopyId}\n\n${fine}\n\n عملية سحب ناجحه ( استقالة )`; 
-    pullOutputBox.textContent = pullMessage;
+    pullOutputBox.textContent = `${normalizedCopyId}\n\n${fine}\n\n عملية سحب ناجحه ( استقالة )`; 
     pullBoxDiv.style.display = 'block';
-    roleMessage = generateRoleRequestBox(normalizedCopyId, "سحب رولات");
-    roleOutputBox.textContent = roleMessage;
+    roleOutputBox.textContent = generateRoleRequestBox(normalizedCopyId, level==='متدرب' ? "ازاله رولات + منع 14 يوم" : "ازاله رولات + منع 7 ايام");
     roleBoxDiv.style.display = 'block';
 
-    result=`${resignationBanner}\n${forceTop}\n﷽**\n\nقرار صـادر مـن <@&1071933369698496532> \n\nالموضوع : إنهاء خدمات\n\nالمسعف : ${normalizedCopyId}\n\nاسمه وكوده الميداني : ${nameCode}\n\nالعقوبة الاجماليه : فصل من الخدمه + منع من التوظيف (${days}) ايام + غرامه مالية بقيمه (${fine})\n\nإعتماد :\n<@&1071933358503903242> \n<@&1071933359086911561> **`;
+    result=`${resignationBanner}\n${invisibleForce}﷽**\n\nقرار صـادر مـن <@&1071933369698496532> \n\nالموضوع : إنهاء خدمات\n\nالمسعف : ${normalizedCopyId}\n\nاسمه وكوده الميداني : ${nameCode}\n\nالعقوبة الاجماليه : فصل من الخدمه + منع من التوظيف (${days}) ايام + غرامه مالية بقيمه (${fine})\n\nإعتماد :\n<@&1071933358503903242> \n<@&1071933359086911561> **`;
   } else if(level==='مستوى 2 فما فوق'){
-    roleMessage = generateRoleRequestBox(normalizedCopyId, "ازالة رولات");
-    roleOutputBox.textContent = roleMessage;
+    roleOutputBox.textContent = generateRoleRequestBox(normalizedCopyId, "ازالة رولات الهلال الاحمر");
     roleBoxDiv.style.display = 'block';
-    result=`${resignationBanner}\n${forceTop}\n﷽**\n\nقرار صـادر مـن <@&1071933369698496532> \n\nالموضوع : استقالة \n\nالمسعف : ${normalizedCopyId}\n\nاسمه وكوده الميداني : ${nameCode}\n\nهل يوجد عليه مخالفات سابقه : ${hasViolations}  \n\nإعتماد :\n<@&1071933358503903242>\n<@&1071933359086911561> **`;
+    result=`${resignationBanner}\n${invisibleForce}﷽**\n\nقرار صـادر مـن <@&1071933369698496532> \n\nالموضوع : استقالة \n\nالمسعف : ${normalizedCopyId}\n\nاسمه وكوده الميداني : ${nameCode}\n\nهل يوجد عليه مخالفات سابقه : ${hasViolations || 'لا'}  \n\nنشكر جهودك المبذولة والملحوظة لدى القطاع ونسأل الله لك التوفيق\n\nإعتماد :\n<@&1071933358503903242>\n<@&1071933359086911561> **`;
   }
   document.getElementById('res_output').textContent=result;
 }
@@ -481,9 +492,10 @@ function updateExtForm(){
 function generateExternalLeave(){
   let copyUser = normalizeCopyId(document.getElementById("ext_copyUser").value);
   let type = document.getElementById("ext_leaveType").value;
-  let result = `﷽\n\nالموضوع : ${type}\n\nالمسعف : ${copyUser}\n\nإعتماد الشؤون الإدارية`;
+  let result = `﷽\n\nقرار صـادر مـن الشؤون الإدارية\n\nالموضوع : ${type}\n\nالمسعف : ${copyUser}\n\nإعتماد :\n<@&1071933358503903242>\n<@&1071933359086911561>`;
   document.getElementById('ext_output').textContent=result;
 }
+function copyExternalLeave(){ navigator.clipboard.writeText(document.getElementById('ext_output').textContent); alert("✅ تم النسخ"); }
 
 function toggleAssFields() {
   const type = document.getElementById('ass_type').value;
@@ -493,41 +505,28 @@ function toggleAssFields() {
 
 function generateAssignment(){
   let copyId = normalizeCopyId(document.getElementById('ass_copyId').value);
-  let result = `﷽\n\nالموضوع : انتداب\n\nالمسعف : ${copyId}\n\nإعتماد الشؤون الإدارية`;
+  let result = `﷽\n\nقرار صـادر مـن الشؤون الإدارية\n\nالموضوع : انتداب\n\nالمسعف : ${copyId}\n\nإعتماد :\n<@&1071933358503903242>\n<@&1071933359086911561>`;
   document.getElementById('ass_output').textContent=result;
 }
 
 function generateRoleRequest() {
   let copyId = normalizeCopyId(document.getElementById("role_copyId").value);
   let type = document.getElementById("role_type").value;
-  let result = generateRoleRequestBox(copyId, type);
-  document.getElementById("role_output").textContent = result;
+  document.getElementById("role_output").textContent = generateRoleRequestBox(copyId, type);
 }
+function copyRoleRequest() { navigator.clipboard.writeText(document.getElementById("role_output").textContent); alert("✅ تم النسخ"); }
 
 const templates = {
  "داخلية": `لقد تم منحك إجازة داخلية محدودة الشروط : ...`,
  "خارجية": `لقد تم منحك إجازة خارجية وفق الشروط التالية: ...`,
  "انتداب": (days=5) => `لقد تم منحك أنتداب لمدة ${days} أيام : ...`,
- "موادع": `شكراً لتواصلكم مع الشؤون الإدارية...`
+ "عودةخارجية": `عوداً حميداً ونتمنى التوفيق لك في الميدان...`
 };
-
-function getResignationTemplatesByLevel(level){
-  if(level === 'متدرب') return [{ key: 'سفلة', label: 'صيغة الاستقالة للمتدرب' }];
-  if(level === 'مستوى 1') return [{ key: 'رفض', label: 'صيغة الاستقالة لمستوى 1' }];
-  if(level === 'مستوى 2 فما فوق') return [{ key: 'قبولاستقالة', label: 'صيغة قبول الاستقالة' }];
-  return [];
-}
-
-function getExternalTemplatesByType(type){
-  if(type === 'اجازة خارجية') return [{ key: 'خارجية', label: 'صيغة الإجازة الخارجية' }];
-  if(type === 'انتهاء اجازة خارجية') return [{ key: 'عودةخارجية', label: 'صيغة العودة من إجازة خارجية' }];
-  return [];
-}
 
 function showQuickTemplates(context, opts = {}){
   let defs = [];
-  if(context === 'resignation') defs = getResignationTemplatesByLevel(opts.level);
-  else if(context === 'externalLeave') defs = getExternalTemplatesByType(opts.type);
+  if(context === 'resignation') defs = [{ key: 'قبولاستقالة', label: 'صيغة قبول الاستقالة' }];
+  else if(context === 'externalLeave') defs = [{ key: 'خارجية', label: 'صيغة الإجازة الخارجية' }];
   else if(context === 'internalLeave') defs = [{ key: 'داخلية', label: 'صيغة الإجازة الداخلية' }];
   else if(context === 'assignment') defs = [{ key: 'انتداب', label: 'صيغة قبول الانتداب', dynamic: true }];
 
@@ -544,7 +543,7 @@ function showQuickTemplates(context, opts = {}){
     btn.className = 'quick-copy';
     btn.textContent = 'نسخ الصيغة';
     btn.onclick = () => {
-      let text = (item.dynamic) ? templates['انتداب'](5) : templates[item.key];
+      let text = (item.dynamic) ? templates['انتداب'](5) : (templates[item.key] || "لا يوجد نص");
       navigator.clipboard.writeText(text);
       alert('✅ تم النسخ');
     };
@@ -559,10 +558,12 @@ function hideQuickPanel(){ document.getElementById('quickPanel').style.display =
 
 function showTemplate() {
   const sel = document.getElementById('templateSelect').value;
-  document.getElementById('templateBox').textContent = (sel === 'انتداب') ? templates['انتداب'](5) : templates[sel];
+  document.getElementById('templateBox').textContent = (sel === 'انتداب') ? templates['انتداب'](5) : (templates[sel] || "");
 }
 
 function copyTemplate() { navigator.clipboard.writeText(document.getElementById('templateBox').textContent); alert('✅ تم النسخ'); }
+
+function copySpecificTemplate(key) { navigator.clipboard.writeText(document.getElementById(key + "Pre").textContent.trim()); alert('✅ تم النسخ'); }
 </script>
 </body>
 </html>
