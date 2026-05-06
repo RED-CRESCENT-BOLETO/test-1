@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <style>
   /* ========================================================
-     BEYOND GOD TIER - SPATIAL LIQUID GLASS UI (2026)
+     BEYOND GOD TIER - SPATIAL LIQUID Glass UI (2026)
      ======================================================== */
   @import url('https://fonts.googleapis.com/css2?family=Readex+Pro:wght@200;300;400;500;600;700&display=swap');
 
@@ -583,24 +583,25 @@ function generateResignation(){
 
 
 // ==========================================================
-// 🧨 الحل الجذري النهائي (تحديث الرابط لمسار GitHub)
+// 🧨 الحل الجذري النهائي (مع الرابط المباشر من GitHub Raw)
 // ==========================================================
 function copyResignationRadical() {
     const text = document.getElementById('res_output').textContent;
     if(!text) return alert("⚠️ الرجاء إنشاء القرار أولاً!");
 
-    // تم وضع مسار صورتك على قتهب بناءً على رسالة الخطأ الخاصة بك
-    const bannerURL = "https://red-crescent-boleto.github.io/استقالة.gif";
+    // قمنا بسحب الرابط الخام من مستودعك لضمان عدم حدوث أي مشاكل أو 404
+    // هذا الرابط ديسكورد يقدر يوصل له غصب
+    const bannerURL = "https://raw.githubusercontent.com/red-crescent-boleto/RED-CRESCENT-BOLETO/main/" + encodeURIComponent("استقالة.gif");
 
     const hackContainer = document.createElement("div");
     hackContainer.style.position = "fixed";
     hackContainer.style.left = "-9999px";
     hackContainer.style.top = "-9999px";
-    hackContainer.style.whiteSpace = "pre-wrap"; 
+    hackContainer.style.whiteSpace = "pre-wrap";
     
     const imgElement = document.createElement("img");
     imgElement.src = bannerURL;
-    imgElement.alt = bannerURL; 
+    imgElement.alt = bannerURL;
     hackContainer.appendChild(imgElement);
     
     hackContainer.appendChild(document.createElement("br"));
@@ -620,15 +621,15 @@ function copyResignationRadical() {
     try {
         const successful = document.execCommand("copy");
         if(successful) {
-            alert("🧨 تم تفعيل الثغرة! اذهب لديسكورد والصق (Ctrl+V) وسيتم رفع البنر ووضع النص تحته تلقائياً.\nتأكد أن ملف (استقالة.gif) مرفوع في مستودع GitHub ليعمل بشكل صحيح.");
+            alert("🧨 تم تفعيل الثغرة! اذهب لديسكورد والصق (Ctrl+V) وسيتم رفع البنر ووضع النص تحته تلقائياً.");
         } else {
             navigator.clipboard.writeText(bannerURL + "\n\n" + text);
-            alert("⚠️ تم النسخ باستخدام الطريقة الاحتياطية (النصية).");
+            alert("⚠️ تم النسخ باستخدام الطريقة الاحتياطية.");
         }
     } catch (err) {
         console.error("Copy exploit failed:", err);
         navigator.clipboard.writeText(bannerURL + "\n\n" + text);
-        alert("⚠️ تم النسخ باستخدام الطريقة الاحتياطية (النصية).");
+        alert("⚠️ تم النسخ باستخدام الطريقة الاحتياطية.");
     }
 
     selection.removeAllRanges();
