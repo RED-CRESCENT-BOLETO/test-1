@@ -583,55 +583,25 @@ function generateResignation(){
 
 
 // ==========================================================
-// 🧨 الحل الجذري النهائي (رفع صورة ديسكورد مباشر مع النص)
+// 🧨 الحل النهائي: نسخ نصي مباشر (الرابط أولاً ليظهر كـ GIF)
 // ==========================================================
 function copyResignationRadical() {
     const text = document.getElementById('res_output').textContent;
     if(!text) return alert("⚠️ الرجاء إنشاء القرار أولاً!");
 
-    // الرابط اللي أرسلته لي بعد تنظيفه من الزوائد
+    // الرابط اللي أرسلته لي بعد ما نظفته
     const bannerURL = "https://cdn.discordapp.com/attachments/1292980090250072164/1460754709894660271/9d6b4f7b4ac2afb2.gif?ex=69fc6216&is=69fb1096&hm=6ad940cc9dfc69bc865451afff66ad5539fd76f20d6c594965398a12aa55ac9f&";
 
-    const hackContainer = document.createElement("div");
-    hackContainer.style.position = "fixed";
-    hackContainer.style.left = "-9999px";
-    hackContainer.style.top = "-9999px";
-    hackContainer.style.whiteSpace = "pre-wrap";
-    
-    const imgElement = document.createElement("img");
-    imgElement.src = bannerURL;
-    hackContainer.appendChild(imgElement);
-    
-    hackContainer.appendChild(document.createElement("br"));
-    hackContainer.appendChild(document.createElement("br"));
-    
-    const textNode = document.createTextNode(text);
-    hackContainer.appendChild(textNode);
-    
-    document.body.appendChild(hackContainer);
+    // ندمج الرابط كـ "نص مباشر" في بداية الكلام مع مسافة سطر
+    const finalString = bannerURL + "\n\n" + text;
 
-    const selection = window.getSelection();
-    const range = document.createRange();
-    range.selectNodeContents(hackContainer);
-    selection.removeAllRanges();
-    selection.addRange(range);
-
-    try {
-        const successful = document.execCommand("copy");
-        if(successful) {
-            alert("🧨 تم النسخ! اذهب لديسكورد والصق (Ctrl+V) وسيتم رفع الصورة ووضع النص تحتها تلقائياً.");
-        } else {
-            navigator.clipboard.writeText(bannerURL + "\n\n" + text);
-            alert("⚠️ تم النسخ باستخدام الطريقة الاحتياطية.");
-        }
-    } catch (err) {
+    // ننسخ كنص عادي، ديسكورد راح يقرا الرابط ويحوله صورة فوق النص
+    navigator.clipboard.writeText(finalString).then(() => {
+        alert("✅ تم النسخ بنجاح! الصق في ديسكورد وسيظهر البنر فوق النص تلقائياً.");
+    }).catch(err => {
         console.error("فشل النسخ:", err);
-        navigator.clipboard.writeText(bannerURL + "\n\n" + text);
-        alert("⚠️ تم النسخ باستخدام الطريقة الاحتياطية.");
-    }
-
-    selection.removeAllRanges();
-    document.body.removeChild(hackContainer);
+        alert("❌ حدث خطأ أثناء النسخ.");
+    });
 }
 // ==========================================================
 
