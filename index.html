@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <style>
   /* ========================================================
-     BEYOND GOD TIER - SPATIAL LIQUID Glass UI (2026)
+     BEYOND GOD TIER - SPATIAL LIQUID GLASS UI (2026)
      ======================================================== */
   @import url('https://fonts.googleapis.com/css2?family=Readex+Pro:wght@200;300;400;500;600;700&display=swap');
 
@@ -583,32 +583,50 @@ function generateResignation(){
 
 
 // ==========================================================
-// 🧨 الحل الجذري النهائي (مع الرابط المباشر من GitHub Raw)
+// 🧨 الحل الجذري النهائي (سحب الملف من نفس المجلد لضمان النسخ المباشر)
 // ==========================================================
-function copyResignationRadical() {
+async function copyResignationRadical() {
     const text = document.getElementById('res_output').textContent;
     if(!text) return alert("⚠️ الرجاء إنشاء القرار أولاً!");
 
-    // قمنا بسحب الرابط الخام من مستودعك لضمان عدم حدوث أي مشاكل أو 404
-    // هذا الرابط ديسكورد يقدر يوصل له غصب
-    const bannerURL = "https://raw.githubusercontent.com/red-crescent-boleto/RED-CRESCENT-BOLETO/main/" + encodeURIComponent("استقالة.gif");
+    // بما أن الصورة (استقالة.gif) موجودة في نفس مجلد الموقع على قتهب
+    // نستخدم مسارها واسمها مباشرة بدلاً من الروابط الخارجية لنتجنب مشاكل الـ CORS بالكامل
+    const imagePath = encodeURI("استقالة.gif"); 
 
+    try {
+        // الطريقة الأولى الأقوى: (سحب الصورة كملف ونسخها)
+        const response = await fetch(imagePath);
+        if(!response.ok) throw new Error("Image not found locally");
+        
+        const blob = await response.blob();
+        const item = new ClipboardItem({
+            [blob.type]: blob,
+            "text/plain": new Blob([text], { type: "text/plain" })
+        });
+        
+        await navigator.clipboard.write([item]);
+        alert("🧨 تم نسخ الصورة والنص كملف مرفق! الصق في ديسكورد الآن.");
+        return;
+    } catch (e) {
+        console.warn("الطريقة الأولى فشلت، جاري تجربة الطريقة الثانية", e);
+    }
+
+    // الطريقة الثانية: (استخدام ثغرة التحديد كبديل احتياطي)
+    // نضع المسار الكامل للصفحة الخاصة بك لضمان ظهور الصورة
+    const safeAbsoluteURL = "https://red-crescent-boleto.github.io/RED-CRESCENT-BOLETO/" + encodeURIComponent("استقالة.gif");
+    
     const hackContainer = document.createElement("div");
     hackContainer.style.position = "fixed";
     hackContainer.style.left = "-9999px";
-    hackContainer.style.top = "-9999px";
     hackContainer.style.whiteSpace = "pre-wrap";
     
     const imgElement = document.createElement("img");
-    imgElement.src = bannerURL;
-    imgElement.alt = bannerURL;
+    imgElement.src = safeAbsoluteURL;
+    
     hackContainer.appendChild(imgElement);
-    
     hackContainer.appendChild(document.createElement("br"));
     hackContainer.appendChild(document.createElement("br"));
-    
-    const textNode = document.createTextNode(text);
-    hackContainer.appendChild(textNode);
+    hackContainer.appendChild(document.createTextNode(text));
     
     document.body.appendChild(hackContainer);
 
@@ -619,17 +637,11 @@ function copyResignationRadical() {
     selection.addRange(range);
 
     try {
-        const successful = document.execCommand("copy");
-        if(successful) {
-            alert("🧨 تم تفعيل الثغرة! اذهب لديسكورد والصق (Ctrl+V) وسيتم رفع البنر ووضع النص تحته تلقائياً.");
-        } else {
-            navigator.clipboard.writeText(bannerURL + "\n\n" + text);
-            alert("⚠️ تم النسخ باستخدام الطريقة الاحتياطية.");
-        }
+        document.execCommand("copy");
+        alert("🧨 تم النسخ بنجاح! الصق في ديسكورد.");
     } catch (err) {
-        console.error("Copy exploit failed:", err);
-        navigator.clipboard.writeText(bannerURL + "\n\n" + text);
-        alert("⚠️ تم النسخ باستخدام الطريقة الاحتياطية.");
+        navigator.clipboard.writeText(safeAbsoluteURL + "\n\n" + text);
+        alert("⚠️ تم النسخ كنص.");
     }
 
     selection.removeAllRanges();
